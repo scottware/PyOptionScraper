@@ -51,10 +51,16 @@ class GoogleSheetWriter:
         cell_list = sheet.range("A1:{0}".format(endCell))
 
         for cell in cell_list:
-            cell.value="{0}".format(textIter.__next__())
+            try:
+                cell.value="{0}".format(textIter.__next__())
+            except StopIteration:
+                pprint(cell)
+                print(cell.value)
+
 
         sheet.update_cells(cell_list)
 
+        sheet.update_cell(1,colcount+1,stock.getUnderlyingPrice())
 
 
 '''
