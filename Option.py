@@ -1,4 +1,5 @@
 import enum
+import locale
 import math
 
 import pytz
@@ -15,6 +16,7 @@ class OptionType(enum.Enum):
 
 
 class Option:
+    locale.setlocale(locale.LC_ALL, 'en_US')
     def __init__(self, stock, type, strike, price, ask, bid, today):
         self._stock = stock
         self._type = type
@@ -80,8 +82,8 @@ class Option:
 
     def __str__(self):
         return "{0} {1}".format(str(self.getType()), self.getExpirationDate()) + \
-               "   ${0:7.2f} ".format(self.getStrikePrice()) + \
-               " ${0:7.2f} {1: 7.2f} {2: 7.2f}".format(self.getPrice(), self.getAskPrice(), self.getBidPrice()) + \
+               "   {0:8} ".format(locale.currency(self.getStrikePrice())) + \
+               " {0:7} {1: 7.2f} {2: 7.2f}".format(locale.currency(self.getPrice()), self.getAskPrice(), self.getBidPrice()) + \
                " {0: >6.2f}%".format(self.getApr())
 
     def toList(self):
