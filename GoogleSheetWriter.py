@@ -41,24 +41,28 @@ class GoogleSheetWriter:
         sheet = self._doc.add_worksheet(name, 1000, 26)
 
         rowcount=len(options)
-        colcount=len(options[0].__repr__().split())
+        colcount=0
 
-        textSubList = [i.__repr__().split() for i in options]
-        textList = [item for sublist in textSubList for item in sublist]
-        textIter = iter(textList)
+        if rowcount > 0 :
+            colcount=len(options[0].__repr__().split())
 
-        endCell =gspread.utils.rowcol_to_a1(rowcount,colcount)
-        cell_list = sheet.range("A1:{0}".format(endCell))
+            textSubList = [i.__repr__().split() for i in options]
+            textList = [item for sublist in textSubList for item in sublist]
+            textIter = iter(textList)
 
-        for cell in cell_list:
-            try:
-                cell.value="{0}".format(textIter.__next__())
-            except StopIteration:
-                pprint(cell)
-                print(cell.value)
+            endCell =gspread.utils.rowcol_to_a1(rowcount,colcount)
+            cell_list = sheet.range("A1:{0}".format(endCell))
 
+            for cell in cell_list:
+                try:
+                    cell.value="{0}".format(textIter.__next__())
+                except StopIteration:
+                    pprint(cell)
+                    print(cell.value)
 
-        sheet.update_cells(cell_list)
+            sheet.update_cells(cell_list)
+        else:
+            sheet.update_cell(1, colcount + 2, "no options met criteria")
 
         sheet.update_cell(1,colcount+1,stock.getUnderlyingPrice())
 

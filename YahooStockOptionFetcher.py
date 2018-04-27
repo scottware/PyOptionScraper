@@ -31,14 +31,14 @@ class YahooStockOptionFetcher:
         stock.setUnderlyingPrice(price)
         optionDates = self.fetchOptionDates()
 
-        pool = ThreadPool(4)
+        pool = ThreadPool(5)
 
         optionDateUrls = [self.optionDateBaseUrl + stock.getSymbol() + "?date=" + str(date) for date in optionDates]
 
         optionsLists = pool.starmap(self.fetchExpirationDate, zip(optionDateUrls, optionDates))
         options= [item for sublist in optionsLists for item in sublist]
 
-        print(options)
+        #print(options)
         pool.close()
         pool.join()
 
@@ -60,7 +60,6 @@ class YahooStockOptionFetcher:
         calls = d['optionChain']['result'][0]['options'][0]['calls']
         puts = d['optionChain']['result'][0]['options'][0]['puts']
         for put in puts:
-            # todo make Option class
             option = Option(self.stock, OptionType.PUT, put['strike'], put['lastPrice'], put['ask'], put['bid'], today)
             option.setExpirationDate(date)
             option.setApr()
