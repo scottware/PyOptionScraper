@@ -15,6 +15,7 @@ class YahooStockOptionFetcher:
     def __init__(self, stock):
         self.stock = stock
 
+
     def fetchdata(self, stock):
         price = self.fetchSharePrice()
         stock.setUnderlyingPrice(price)
@@ -36,9 +37,8 @@ class YahooStockOptionFetcher:
         optionDateUrls = [self.optionDateBaseUrl + stock.getSymbol() + "?date=" + str(date) for date in optionDates]
 
         optionsLists = pool.starmap(self.fetchExpirationDate, zip(optionDateUrls, optionDates))
-        options= [item for sublist in optionsLists for item in sublist]
+        options = [item for sublist in optionsLists for item in sublist]
 
-        #print(options)
         pool.close()
         pool.join()
 
@@ -51,6 +51,7 @@ class YahooStockOptionFetcher:
     #        print(json.dumps(d, indent=4, sort_keys=True))
 
     def fetchExpirationDate(self, dateUrl, date):
+        # date as epoch time
         today = datetime.datetime.utcnow()
         optionSet = []
         print("Fetching {0}".format(dateUrl))

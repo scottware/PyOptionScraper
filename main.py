@@ -20,9 +20,9 @@ config = {'stockList': config['DEFAULT'].get('symbol').split(','),
 
 
 
-def go(stock, goog=False):
-    print(stock+"=================================")
-    stock = Stock(stock)
+def go(stockSymbol, goog=False):
+    print(stockSymbol+"=================================")
+    stock = Stock(stockSymbol)
     options = stock.loadData(YahooStockOptionFetcher(stock))
     options.sort(key=lambda x: x.getApr(), reverse=True)
     outputList = filter(lambda x: x.getType() == OptionType[config['option_type']], options)

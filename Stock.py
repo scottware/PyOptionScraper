@@ -1,4 +1,5 @@
 from YahooStockOptionFetcher import *
+#from TDAStockOptionFetcher import *
 
 
 class Stock:
@@ -23,6 +24,7 @@ class Stock:
     def loadData(self, stockOptionFetcher):
         if (len(self.options)==0):
             sof = YahooStockOptionFetcher(self)
+            #sof = TDAStockOptionFetcher(self)
             #list = sof.fetchdata(self)
             list = sof.fetchdataParallel(self)
             #sof.parse(list)

@@ -17,6 +17,7 @@ class OptionType(enum.Enum):
 
 class Option:
     locale.setlocale(locale.LC_ALL, 'en_US')
+
     def __init__(self, stock, type, strike, price, ask, bid, today):
         self._stock = stock
         self._type = type
@@ -28,6 +29,7 @@ class Option:
 
     def setExpirationDate(self, expirationDate):
         if expirationDate % 86400 != 0:
+            self._expirationDate = 0
             return
 
         date = datetime.datetime.fromtimestamp(expirationDate)
@@ -88,28 +90,29 @@ class Option:
 
     def toList(self):
         s = str(self)
-        l =s.split()
+        l = s.split()
 
     __repr__ = __str__
 
 
-test=False
+test = False
 
-if test==True:
+if test == True:
     import calendar
-    d=datetime.datetime(2018,5,18,0,0,0,0,tzinfo=pytz.timezone('GMT'))
+
+    d = datetime.datetime(2018, 5, 18, 0, 0, 0, 0, tzinfo=pytz.timezone('GMT'))
     timestamp = calendar.timegm(d.timetuple())
 
-    option = Option('AMZN', 'PUT', 1350,1430.79, 19.5, 16.85, datetime.datetime.utcnow())
+    option = Option('AMZN', 'PUT', 1350, 1430.79, 19.5, 16.85, datetime.datetime.utcnow())
     option.setExpirationDate(timestamp)
     option.setApr()
     print(option)
     datetime.datetime.utcnow()
 
-    option2 = Option('AMZN', 'PUT', 1300,1430.79, 20.1, 17.40, datetime.datetime.utcnow())
+    option2 = Option('AMZN', 'PUT', 1300, 1430.79, 20.1, 17.40, datetime.datetime.utcnow())
     option2.setExpirationDate(timestamp)
     option2.setApr()
     print(option2)
 
-    l=option.__str__().split()
+    l = option.__str__().split()
     print(l)
