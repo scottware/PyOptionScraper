@@ -12,9 +12,9 @@ class YahooStockOptionFetcher:
     optionUrl = "https://query1.finance.yahoo.com/v7/finance/options/"
     optionDateBaseUrl = "https://query1.finance.yahoo.com/v7/finance/options/"
 
-    def __init__(self, stock):
+    def __init__(self, stock, config):
         self.stock = stock
-
+        self._config = config
 
     def fetchdata(self, stock):
         price = self.fetchSharePrice()

@@ -23,12 +23,10 @@ class Stock:
 
     def loadData(self, stockOptionFetcher):
         if (len(self.options)==0):
-            sof = YahooStockOptionFetcher(self)
-            #sof = TDAStockOptionFetcher(self)
-            #list = sof.fetchdata(self)
-            list = sof.fetchdataParallel(self)
-            #sof.parse(list)
-            #sof.fetchSharePrice()
+            #list = stockOptionFetcher.fetchdata(self)
+            list = stockOptionFetcher.fetchdataParallel(self)
+            #stockOptionFetcher.parse(list)
+            #stockOptionFetcher.fetchSharePrice()
             return list
 
     def __str__(self):
