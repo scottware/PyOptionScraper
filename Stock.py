@@ -1,4 +1,4 @@
-from YahooStockOptionFetcher import *
+#from YahooStockOptionFetcher import *
 #from TDAStockOptionFetcher import *
 
 
@@ -23,8 +23,7 @@ class Stock:
 
     def loadData(self, stockOptionFetcher):
         if (len(self.options)==0):
-            #list = stockOptionFetcher.fetchdata(self)
-            list = stockOptionFetcher.fetchdataParallel(self)
+            list = stockOptionFetcher.fetchdata(self)
             #stockOptionFetcher.parse(list)
             #stockOptionFetcher.fetchSharePrice()
             return list

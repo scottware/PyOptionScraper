@@ -12,20 +12,12 @@ class YahooStockOptionFetcher:
     optionUrl = "https://query1.finance.yahoo.com/v7/finance/options/"
     optionDateBaseUrl = "https://query1.finance.yahoo.com/v7/finance/options/"
 
-    def __init__(self, stock, config):
-        self.stock = stock
+    def __init__(self, config):
         self._config = config
 
     def fetchdata(self, stock):
-        price = self.fetchSharePrice()
-        stock.setUnderlyingPrice(price)
-        optionDates = self.fetchOptionDates()
-        options = []
-        for date in optionDates:
-            optionDateUrl = self.optionDateBaseUrl + stock.getSymbol() + "?date=" + str(date)
-            tempSet = self.fetchExpirationDate(optionDateUrl, date)
-            options.extend(tempSet)
-        return options
+        self.stock=stock
+        return self.fetchdataParallel(stock)
 
     def fetchdataParallel(self, stock):
         price = self.fetchSharePrice()
