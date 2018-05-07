@@ -19,6 +19,7 @@ config = {'stockList': configuration['DEFAULT'].get('symbol').split(','),
 
 source = configuration['DEFAULT'].get('source').upper()
 
+
 def sofFactory():
     if source == 'YHOO':
         return YahooStockOptionFetcher(config)
@@ -26,6 +27,8 @@ def sofFactory():
         configTDA = configparser.ConfigParser()
         configTDA.read('configTDA.ini')
         config['tda_api_key'] = configTDA['TDA'].get('tda_api_key')
+        config['refresh_token'] = configTDA['OAUTH'].get('refresh_token')
+        config['access_token'] = configTDA['OAUTH'].get('access_token')
         return TDAStockOptionFetcher(config)
 
 
@@ -33,7 +36,7 @@ def go(stockSymbol, goog=False):
     print(stockSymbol + "=================================")
     stock = Stock(stockSymbol)
 
-    sof=sofFactory();
+    sof = sofFactory()
 
     options = stock.loadData(sof)
     options.sort(key=lambda x: x.getApr(), reverse=True)

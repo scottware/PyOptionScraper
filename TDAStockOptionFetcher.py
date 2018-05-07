@@ -22,13 +22,27 @@ class TDAStockOptionFetcher:
         self._config = config
 
     def fetchdata(self, stock):
-        self.stock=stock
+        #pprint(self._config)
+        self.stock = stock
         urlParams = {'apikey': self._config['tda_api_key'],
-                  'symbol': stock.getSymbol(),
-                  'contractType': "PUT", 'range': 'OTM', 'OptionType': 'S'}
+                     'symbol': stock.getSymbol(),
+                     'contractType': "PUT", 'range': 'OTM', 'OptionType': 'S'}
         url = self._baseUrl + urllib.parse.urlencode(urlParams)
 
-        with urllib.request.urlopen(url) as response:
+        args = urllib.parse.urlencode(urlParams).encode("utf-8")
+        headers = {}
+        useAccessToken = True
+        if useAccessToken == True:
+            headers = {"Authorization": "Bearer {0}".format(self._config['access_token'])}
+
+        request = urllib.request.Request(url, headers=headers, method='GET')
+
+        #pprint(request.get_full_url())
+        #pprint(request.headers)
+        #pprint(request.data)
+        #pprint(request.get_method())
+
+        with urllib.request.urlopen(request) as response:
             html = response.read()
         d = json.loads(html)
 
@@ -60,3 +74,87 @@ class TDAStockOptionFetcher:
                 optionSet.append(option)
 
         return optionSet
+
+    def oauth(self, step):
+        if step == 1:
+            import webbrowser
+            authorize_url = "https://auth.tdameritrade.com/auth?response_type=code&redirect_uri=http%3a%2f%2flocalhost%3a8080&client_id=sware%40AMER.OAUTHAP"
+            webbrowser.open(authorize_url, new=1, autoraise=True)
+            # copy resulting string from after code=. url decode. let that become self._code
+            print("type what is after 'code=' in the URI:")
+            code = urllib.parse.unquote(input())
+
+            self._code = code
+            step = 2
+        if step == 2:
+            step2url = "https://api.tdameritrade.com/v1/oauth2/token?"
+            step2args = {'grant_type': 'authorization_code', 'refresh_token': '', 'access_type': 'offline',
+                         'code': self._code, 'client_id': 'sware@AMER.OAUTHAP', 'redirect_uri': 'http://localhost:8080'}
+            args = urllib.parse.urlencode(step2args).encode("utf-8")
+
+            headers = {"Content-Type": 'application/x-www-form-urlencoded'}
+
+            request = urllib.request.Request(step2url, data=args, headers=headers, method='POST')
+
+            pprint(request.get_full_url())
+            pprint(request.headers)
+            with urllib.request.urlopen(request) as response:
+                html = response.read()
+            d = json.loads(html)
+            pprint(d)
+            configTDA = configparser.ConfigParser()
+            configTDA.read('configTDA.ini')
+            if not 'OAUTH' in configTDA.sections():
+                configTDA.add_section('OAUTH')
+            configTDA.set('OAUTH', 'refresh_token', d['refresh_token'])
+            configTDA.set('OAUTH', 'access_token', d['access_token'])
+            with open('configTDA.ini', 'w') as configfile:
+                configTDA.write(configfile)
+
+    def refreshToken(self):
+        refreshUrl = "https://api.tdameritrade.com/v1/oauth2/token"
+        refreshArgs = {'grant_type': 'refresh_token', 'refresh_token': self._config['refresh_token'], 'access_type': '',
+                       'code': '', 'client_id': 'sware@AMER.OAUTHAP', 'redirect_uri': ''}
+
+        args = urllib.parse.urlencode(refreshArgs).encode("utf-8")
+
+        headers = {"Content-Type": 'application/x-www-form-urlencoded'}
+        request = urllib.request.Request(refreshUrl, data=args, headers=headers, method='POST')
+
+        with urllib.request.urlopen(request) as response:
+            html = response.read()
+        d = json.loads(html)
+        new_access_token = d['access_token']
+        print("new access token: {0}".format(new_access_token))
+
+
+# tda = TDAStockOptionFetcher(1)
+# tda.oauth(1)
+# tda.fetchdata(Stock('AMZN'))
+
+
+import configparser
+
+configuration = configparser.ConfigParser()
+configuration.read('example.ini')
+
+config = {'stockList': configuration['DEFAULT'].get('symbol').split(','),
+          'option_type': configuration['DEFAULT'].get('option_type', 'put').upper(),
+          'filter_apr_low': configuration['DEFAULT'].getfloat('filter_apr_low', 0.0),
+          'filter_apr_high': configuration['DEFAULT'].getfloat('filter_apr_high', 100.0),
+          'filter_strike_high': configuration['DEFAULT'].getfloat('filter_strike_high'),
+          }
+
+source = configuration['DEFAULT'].get('source').upper()
+
+configTDA = configparser.ConfigParser()
+configTDA.read('configTDA.ini')
+config['tda_api_key'] = configTDA['TDA'].get('tda_api_key')
+config['access_token'] = configTDA['OAUTH'].get('access_token')
+config['refresh_token'] = configTDA['OAUTH'].get('refresh_token')
+
+
+tda = TDAStockOptionFetcher(config)
+# tda.refreshToken()
+#tda.oauth(1)
+tda.fetchdata(Stock("AMZN"))
