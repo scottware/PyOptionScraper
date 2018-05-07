@@ -1,6 +1,7 @@
 import datetime
 import time
 import urllib.request
+import urllib.error
 import urllib.parse
 import json.decoder
 from multiprocessing.dummy import Pool as ThreadPool
@@ -42,38 +43,43 @@ class TDAStockOptionFetcher:
         #pprint(request.data)
         #pprint(request.get_method())
 
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
+        except urllib.error.HTTPError as e:
+            if e.code==401:
+                self.refreshToken()
+        else:
             html = response.read()
-        d = json.loads(html)
+            d = json.loads(html)
 
-        self.stock.setUnderlyingPrice(d['underlyingPrice'])
+            self.stock.setUnderlyingPrice(d['underlyingPrice'])
 
-        putExpDateMap = d['putExpDateMap']
-        putExpDates = putExpDateMap.keys()
-        today = datetime.datetime.utcnow()
+            putExpDateMap = d['putExpDateMap']
+            putExpDates = putExpDateMap.keys()
+            today = datetime.datetime.utcnow()
 
-        optionSet = []
-        for expiryDays in putExpDates:
-            date, days = expiryDays.split(':')
-            pattern = '%Y-%m-%d'
-            epoch = int(time.mktime(time.strptime(date, pattern)))
-            # todo this is in localtime. Probably is supposed to be 4pm est
-            # todo this is just a hack...
-            tmp = epoch // 86400
-            epoch = tmp * 86400
+            optionSet = []
+            for expiryDays in putExpDates:
+                date, days = expiryDays.split(':')
+                pattern = '%Y-%m-%d'
+                epoch = int(time.mktime(time.strptime(date, pattern)))
+                # todo this is in localtime. Probably is supposed to be 4pm est
+                # todo this is just a hack...
+                tmp = epoch // 86400
+                epoch = tmp * 86400
 
-            thisDateMap = putExpDateMap[expiryDays]
-            for strike in thisDateMap.keys():
-                bid = thisDateMap[strike][0]['bid']
-                ask = thisDateMap[strike][0]['ask']
-                last = thisDateMap[strike][0]['last']
-                option = Option(self.stock, OptionType.PUT, float(strike), last, ask, bid,
-                                today)
-                option.setExpirationDate(epoch)
-                option.setApr()
-                optionSet.append(option)
+                thisDateMap = putExpDateMap[expiryDays]
+                for strike in thisDateMap.keys():
+                    bid = thisDateMap[strike][0]['bid']
+                    ask = thisDateMap[strike][0]['ask']
+                    last = thisDateMap[strike][0]['last']
+                    option = Option(self.stock, OptionType.PUT, float(strike), last, ask, bid,
+                                    today)
+                    option.setExpirationDate(epoch)
+                    option.setApr()
+                    optionSet.append(option)
 
-        return optionSet
+            return optionSet
 
     def oauth(self, step):
         if step == 1:
@@ -102,7 +108,9 @@ class TDAStockOptionFetcher:
                 html = response.read()
             d = json.loads(html)
             pprint(d)
-            configTDA = configparser.ConfigParser()
+
+            # TODO: abstract config saving out. This is duplicate code from self.refreshToken()
+            # configTDA = configparser.ConfigParser()
             configTDA.read('configTDA.ini')
             if not 'OAUTH' in configTDA.sections():
                 configTDA.add_section('OAUTH')
@@ -126,6 +134,16 @@ class TDAStockOptionFetcher:
         d = json.loads(html)
         new_access_token = d['access_token']
         print("new access token: {0}".format(new_access_token))
+
+        # TODO: abstract config saving out. This is duplicate code from self.oauth()
+        configTDA = configparser.ConfigParser()
+        configTDA.read('configTDA.ini')
+        if not 'OAUTH' in configTDA.sections():
+            configTDA.add_section('OAUTH')
+        configTDA.set('OAUTH', 'access_token', d['access_token'])
+        with open('configTDA.ini', 'w') as configfile:
+            configTDA.write(configfile)
+
 
 
 # tda = TDAStockOptionFetcher(1)
