@@ -89,7 +89,7 @@ class TDAStockOptionFetcher:
         if step == 2:
             step2url = "https://api.tdameritrade.com/v1/oauth2/token?"
             step2args = {'grant_type': 'authorization_code', 'refresh_token': '', 'access_type': 'offline',
-                         'code': self._code, 'client_id': 'sware@AMER.OAUTHAP', 'redirect_uri': 'http://localhost:8080'}
+                         'code': self._code, 'client_id': self._config['tda_api_key'], 'redirect_uri': 'http://localhost:8080'}
             args = urllib.parse.urlencode(step2args).encode("utf-8")
 
             headers = {"Content-Type": 'application/x-www-form-urlencoded'}
@@ -114,7 +114,7 @@ class TDAStockOptionFetcher:
     def refreshToken(self):
         refreshUrl = "https://api.tdameritrade.com/v1/oauth2/token"
         refreshArgs = {'grant_type': 'refresh_token', 'refresh_token': self._config['refresh_token'], 'access_type': '',
-                       'code': '', 'client_id': 'sware@AMER.OAUTHAP', 'redirect_uri': ''}
+                       'code': '', 'client_id': self._config['tda_api_key'], 'redirect_uri': ''}
 
         args = urllib.parse.urlencode(refreshArgs).encode("utf-8")
 
