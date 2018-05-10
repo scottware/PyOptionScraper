@@ -47,6 +47,11 @@ class TDAStockOptionFetcher:
             response = urllib.request.urlopen(request)
         except urllib.error.HTTPError as e:
             if e.code==401:
+                print("v" * 20)
+                print("Error occurred fetching {0}".format(request.get_full_url()))
+                print(e)
+                print("off to fetch new tokens")
+                print("^" * 20)
                 self.refreshToken()
         else:
             html = response.read()
@@ -104,20 +109,28 @@ class TDAStockOptionFetcher:
 
             pprint(request.get_full_url())
             pprint(request.headers)
-            with urllib.request.urlopen(request) as response:
-                html = response.read()
-            d = json.loads(html)
-            pprint(d)
 
-            # TODO: abstract config saving out. This is duplicate code from self.refreshToken()
-            # configTDA = configparser.ConfigParser()
-            configTDA.read('configTDA.ini')
-            if not 'OAUTH' in configTDA.sections():
-                configTDA.add_section('OAUTH')
-            configTDA.set('OAUTH', 'refresh_token', d['refresh_token'])
-            configTDA.set('OAUTH', 'access_token', d['access_token'])
-            with open('configTDA.ini', 'w') as configfile:
-                configTDA.write(configfile)
+            try:
+                response = urllib.request.urlopen(request)
+            except urllib.error.HTTPError as e:
+                print("v" * 20)
+                print("Error occurred fetching {0}".format(request.get_full_url()))
+                print(e)
+                print("^" * 20)
+            else:
+                html = response.read()
+                d = json.loads(html)
+                pprint(d)
+
+                # TODO: abstract config saving out. This is duplicate code from self.refreshToken()
+                # configTDA = configparser.ConfigParser()
+                configTDA.read('configTDA.ini')
+                if not 'OAUTH' in configTDA.sections():
+                    configTDA.add_section('OAUTH')
+                configTDA.set('OAUTH', 'refresh_token', d['refresh_token'])
+                configTDA.set('OAUTH', 'access_token', d['access_token'])
+                with open('configTDA.ini', 'w') as configfile:
+                    configTDA.write(configfile)
 
     def refreshToken(self):
         refreshUrl = "https://api.tdameritrade.com/v1/oauth2/token"
@@ -129,20 +142,29 @@ class TDAStockOptionFetcher:
         headers = {"Content-Type": 'application/x-www-form-urlencoded'}
         request = urllib.request.Request(refreshUrl, data=args, headers=headers, method='POST')
 
-        with urllib.request.urlopen(request) as response:
+        try:
+            response = urllib.request.urlopen(request)
+        except urllib.error.HTTPError as e:
+            print("v"*20)
+            print("Error occurred fetching {0}".format(request.get_full_url()))
+            print(request.data)
+            print(e)
+            print("^"*20)
+            self.oauth(1)
+        else:
             html = response.read()
-        d = json.loads(html)
-        new_access_token = d['access_token']
-        print("new access token: {0}".format(new_access_token))
+            d = json.loads(html)
+            new_access_token = d['access_token']
+            print("new access token: {0}".format(new_access_token))
 
-        # TODO: abstract config saving out. This is duplicate code from self.oauth()
-        configTDA = configparser.ConfigParser()
-        configTDA.read('configTDA.ini')
-        if not 'OAUTH' in configTDA.sections():
-            configTDA.add_section('OAUTH')
-        configTDA.set('OAUTH', 'access_token', d['access_token'])
-        with open('configTDA.ini', 'w') as configfile:
-            configTDA.write(configfile)
+            # TODO: abstract config saving out. This is duplicate code from self.oauth()
+            configTDA = configparser.ConfigParser()
+            configTDA.read('configTDA.ini')
+            if not 'OAUTH' in configTDA.sections():
+                configTDA.add_section('OAUTH')
+            configTDA.set('OAUTH', 'access_token', d['access_token'])
+            with open('configTDA.ini', 'w') as configfile:
+                configTDA.write(configfile)
 
 
 
